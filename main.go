@@ -7,20 +7,25 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sync"
 )
+
+var printLock sync.Mutex
+var fileLock sync.Mutex
 
 func main() {
 	u := flag.String("u", "", "Target URL")
 	l := flag.String("l", "", "File with list of target URLs")
 	i := flag.Bool("i", false, "Impersonate browser when sending requests")
 	timeout := flag.Int("timeout", 5, "Connection and request timeout")
+	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
 	outputFile := flag.String("o", "", "File to write results to")
 
 	flag.Parse()
-	scanner := newScanner(*timeout)
+	scanner := newScanner(*timeout, *i)
 
 	if *u != "" {
-		result, err := scanner.Scan(*u, *i)
+		result, err := scanner.Scan(*u)
 		if err == nil {
 			prettyPrintAsJson(result)
 		} else {
@@ -36,9 +41,9 @@ func main() {
 			wordListScanner := bufio.NewScanner(wordList)
 
 			if *outputFile != "" {
-				scanToFile(*scanner, *wordListScanner, *outputFile, *i)
+				scanToFile(*scanner, *wordListScanner, *outputFile, *maxThreads)
 			} else {
-				scanToStdOut(*scanner, *wordListScanner, *i)
+				scanToStdOut(*scanner, *wordListScanner, *maxThreads)
 			}
 
 			wordList.Close()
@@ -69,41 +74,75 @@ func prettyPrintAsJson(obj any) {
 	fmt.Println(string(j))
 }
 
-func scanToStdOut(scanner scanner, wordListScanner bufio.Scanner, impersonateBrowser bool) {
+func scanToStdOut(scanner scanner, wordListScanner bufio.Scanner, maxThreads int) {
+	requestQueue := make(chan string, maxThreads)
+	wg := &sync.WaitGroup{}
+	for i := 0; i < maxThreads; i++ {
+		wg.Add(1)
+		go scanToStdOutWorker(wg, requestQueue, scanner)
+	}
+
 	wordListScanner.Split(bufio.ScanLines)
 
 	for wordListScanner.Scan() {
-		result, err := scanner.Scan(wordListScanner.Text(), impersonateBrowser)
+		requestQueue <- wordListScanner.Text()
+	}
+	close(requestQueue)
+	wg.Wait()
+}
+
+func scanToStdOutWorker(wg *sync.WaitGroup, requestQueue chan string, scanner scanner) {
+	defer wg.Done()
+	for item := range requestQueue {
+		result, err := scanner.Scan(item)
 		if err == nil {
+			printLock.Lock()
 			printAsJson(result)
+			printLock.Unlock()
 		}
 	}
 }
 
-func scanToFile(scanner scanner, wordListScanner bufio.Scanner, outfile string, impersonateBrowser bool) error {
+func scanToFile(scanner scanner, wordListScanner bufio.Scanner, outfile string, maxThreads int) error {
 	f, err := os.Create(outfile)
 	if err != nil {
 		return errors.New("failed to create file " + outfile)
 	}
 
-	num := 1
+	completed := 0
+	requestQueue := make(chan string, maxThreads)
+	wg := &sync.WaitGroup{}
+	for i := 0; i < maxThreads; i++ {
+		wg.Add(1)
+		go scanToFileWorker(wg, requestQueue, scanner, f, &completed)
+	}
+
 	for wordListScanner.Scan() {
-		result, err := scanner.Scan(wordListScanner.Text(), impersonateBrowser)
+		requestQueue <- wordListScanner.Text()
+	}
+	close(requestQueue)
+	wg.Wait()
+	f.Close()
+
+	return nil
+}
+
+func scanToFileWorker(wg *sync.WaitGroup, requestQueue chan string, scanner scanner, file *os.File, completed *int) {
+	defer wg.Done()
+	for item := range requestQueue {
+		result, err := scanner.Scan(item)
 		if err == nil {
 			j, err := json.Marshal(result)
 			if err != nil {
 				fmt.Println(err)
-				return errors.New("failed to serialize result for " + result.Url)
 			}
 
-			fmt.Fprintln(f, string(j))
+			fileLock.Lock()
+			fmt.Fprintln(file, string(j))
+			fileLock.Unlock()
 		}
 
-		fmt.Printf("\r%d URLs scanned", num)
-		num++
+		*completed++
+		fmt.Printf("\r%d URLs scanned", *completed)
 	}
-
-	f.Close()
-
-	return nil
 }

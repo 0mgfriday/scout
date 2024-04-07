@@ -11,10 +11,11 @@ import (
 )
 
 type scanner struct {
-	client http.Client
+	client             http.Client
+	impersonateBrowser bool
 }
 
-func newScanner(timeout int) *scanner {
+func newScanner(timeout int, impersonateBrowser bool) *scanner {
 	newScanner := scanner{
 		client: http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -28,12 +29,13 @@ func newScanner(timeout int) *scanner {
 				},
 			},
 		},
+		impersonateBrowser: impersonateBrowser,
 	}
 
 	return &newScanner
 }
 
-func (scan scanner) Scan(u string, impersonateBrowser bool) (*Report, error) {
+func (scan scanner) Scan(u string) (*Report, error) {
 	if !strings.HasPrefix(u, "http") {
 		u = "https://" + u
 	}
@@ -42,7 +44,7 @@ func (scan scanner) Scan(u string, impersonateBrowser bool) (*Report, error) {
 		return nil, errors.New("invalid url")
 	}
 
-	rsp, err := scan.getWithRetry(uri.String(), 2, impersonateBrowser)
+	rsp, err := scan.getWithRetry(uri.String(), 2)
 	if err != nil {
 		return nil, errors.New("request failed")
 	}
@@ -51,8 +53,8 @@ func (scan scanner) Scan(u string, impersonateBrowser bool) (*Report, error) {
 	return reportFromResponse(rsp.Request.URL.String(), IPs, rsp), nil
 }
 
-func (scan scanner) getWithRetry(url string, attempts int, impersonateBrowser bool) (*http.Response, error) {
-	req, err := createReq(url, impersonateBrowser)
+func (scan scanner) getWithRetry(url string, attempts int) (*http.Response, error) {
+	req, err := scan.createReq(url)
 
 	for i := 1; i <= attempts; i++ {
 		if err != nil {
@@ -87,13 +89,13 @@ func (scan scanner) doFallbackRequest(req *http.Request) (*http.Response, error)
 	}
 }
 
-func createReq(url string, impersonateBrowser bool) (*http.Request, error) {
+func (scan scanner) createReq(url string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	if impersonateBrowser {
+	if scan.impersonateBrowser {
 		req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0")
 		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
 		req.Header.Add("Accept-Language", "en-US,en;q=0.5")
