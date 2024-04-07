@@ -1,13 +1,18 @@
 package main
 
 import (
+	"crypto/tls"
 	"errors"
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func Scan(u string) (*Report, error) {
+	if !strings.HasPrefix(u, "http") {
+		u = "https://" + u
+	}
 	uri, err := url.ParseRequestURI(u)
 	if err != nil {
 		return nil, errors.New("invalid url")
@@ -16,6 +21,9 @@ func Scan(u string) (*Report, error) {
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
+		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
 
