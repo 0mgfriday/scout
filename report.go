@@ -6,17 +6,20 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
+
+	wappalyzer "github.com/projectdiscovery/wappalyzergo"
 )
 
 type Report struct {
-	Url     string
-	IPs     []string
-	TLS     TLSInfo
-	Status  int
-	Title   string
-	Tech    string
-	Headers map[string]string
-	JSFiles []string
+	Url        string
+	IPs        []string
+	TLS        TLSInfo
+	Status     int
+	Title      string
+	Wappalyzer string
+	Headers    map[string]string
+	JSFiles    []string
 }
 
 func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response) *Report {
@@ -29,10 +32,20 @@ func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response) *R
 	report.TLS = *infoFromCert(rsp.TLS.PeerCertificates[0])
 	report.Headers = headersToMap(rsp.Header)
 
-	body := readAsString(rsp)
-	if body != "" {
-		report.Title = getTitle(body)
-		report.JSFiles = getJSFiles(body)
+	//body := readAsString(rsp)
+	defer rsp.Body.Close()
+	if rsp.StatusCode == http.StatusOK {
+		bodyBytes, err := io.ReadAll(rsp.Body)
+		if err != nil {
+			fmt.Println(err)
+		}
+		bodyString := string(bodyBytes)
+
+		if len(bodyBytes) > 0 {
+			report.Title = getTitle(bodyString)
+			report.JSFiles = getJSFiles(bodyString)
+			report.Wappalyzer = getWappalyzerResult(rsp.Header, bodyBytes)
+		}
 	}
 
 	return &report
@@ -60,21 +73,6 @@ func headersToMap(header http.Header) map[string]string {
 	return headers
 }
 
-func readAsString(rsp *http.Response) string {
-	defer rsp.Body.Close()
-	bodyString := ""
-
-	if rsp.StatusCode == http.StatusOK {
-		bodyBytes, err := io.ReadAll(rsp.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-		bodyString = string(bodyBytes)
-	}
-
-	return bodyString
-}
-
 func getTitle(s string) string {
 	r := regexp.MustCompile(`<(title|Title|TITLE)>(?P<Title>.{1,150})</(title|Title|TITLE)>`)
 	match := r.FindStringSubmatch(s)
@@ -98,4 +96,17 @@ func getJSFiles(s string) []string {
 	}
 
 	return files
+}
+
+func getWappalyzerResult(header http.Header, body []byte) string {
+	tech := ""
+	wappalyzerClient, err := wappalyzer.New()
+	if err == nil {
+		fingerprints := wappalyzerClient.Fingerprint(header, body)
+		for f := range fingerprints {
+			tech += f + ", "
+		}
+	}
+
+	return strings.TrimSuffix(tech, ", ")
 }
