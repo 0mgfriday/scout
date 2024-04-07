@@ -7,20 +7,25 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type scanner struct {
 	client http.Client
 }
 
-func newScanner() *scanner {
+func newScanner(timeout int) *scanner {
 	newScanner := scanner{
 		client: http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+				ResponseHeaderTimeout: time.Duration(timeout) * time.Second,
+				Dial: func(network, addr string) (net.Conn, error) {
+					return net.DialTimeout(network, addr, time.Duration(timeout)*time.Second)
+				},
 			},
 		},
 	}
@@ -37,7 +42,11 @@ func (scan scanner) Scan(u string, impersonateBrowser bool) (*Report, error) {
 		return nil, errors.New("invalid url")
 	}
 
-	rsp, _ := scan.getWithRetry(uri.String(), 2, impersonateBrowser)
+	rsp, err := scan.getWithRetry(uri.String(), 2, impersonateBrowser)
+	if err != nil {
+		return nil, errors.New("request failed")
+	}
+
 	IPs, _ := net.LookupIP(uri.Host)
 	return reportFromResponse(uri.String(), IPs, rsp), nil
 }
@@ -79,15 +88,6 @@ func createReq(url string, impersonateBrowser bool) (*http.Request, error) {
 		req.Header.Add("Sec-Fetch-User", "?1")
 	} else {
 		req.Header.Add("Accept", "*/*")
-	}
-
-	return req, nil
-}
-
-func createBrowserReq(url string) (*http.Request, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, errors.New(err.Error())
 	}
 
 	return req, nil
