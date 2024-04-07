@@ -14,9 +14,10 @@ func main() {
 	l := flag.String("l", "", "File with list of target URLs")
 
 	flag.Parse()
+	scanner := newScanner()
 
 	if *u != "" {
-		result, err := Scan(*u)
+		result, err := scanner.Scan(*u)
 		if err == nil {
 			prettyPrintAsJson(result)
 		} else {
@@ -34,7 +35,7 @@ func main() {
 			fileScanner.Split(bufio.ScanLines)
 
 			for fileScanner.Scan() {
-				result, err := Scan(fileScanner.Text())
+				result, err := scanner.Scan(fileScanner.Text())
 				if err == nil {
 					printAsJson(result)
 				}
