@@ -29,7 +29,10 @@ func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response) *R
 		Status: rsp.StatusCode,
 	}
 
-	report.TLS = *infoFromCert(rsp.TLS.PeerCertificates[0])
+	if rsp.TLS != nil && len(rsp.TLS.PeerCertificates) > 0 {
+		report.TLS = *infoFromCert(rsp.TLS.PeerCertificates[0])
+	}
+
 	report.Headers = headersToMap(rsp.Header)
 
 	//body := readAsString(rsp)
