@@ -84,7 +84,11 @@ func getTitle(s string) string {
 		return ""
 	}
 
-	return match[index]
+	if len(match) != 0 {
+		return match[index]
+	}
+
+	return ""
 }
 
 func getJSFiles(s string) []string {
