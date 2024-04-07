@@ -12,12 +12,13 @@ import (
 func main() {
 	u := flag.String("u", "", "Target URL")
 	l := flag.String("l", "", "File with list of target URLs")
+	i := flag.Bool("i", false, "Impersonate browser when sending requests")
 
 	flag.Parse()
 	scanner := newScanner()
 
 	if *u != "" {
-		result, err := scanner.Scan(*u)
+		result, err := scanner.Scan(*u, *i)
 		if err == nil {
 			prettyPrintAsJson(result)
 		} else {
@@ -35,7 +36,7 @@ func main() {
 			fileScanner.Split(bufio.ScanLines)
 
 			for fileScanner.Scan() {
-				result, err := scanner.Scan(fileScanner.Text())
+				result, err := scanner.Scan(fileScanner.Text(), *i)
 				if err == nil {
 					printAsJson(result)
 				}
