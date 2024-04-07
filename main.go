@@ -13,7 +13,7 @@ func main() {
 	u := flag.String("u", "", "Target URL")
 	l := flag.String("l", "", "File with list of target URLs")
 	i := flag.Bool("i", false, "Impersonate browser when sending requests")
-	timeout := flag.Int("timeout", 5, "Impersonate browser when sending requests")
+	timeout := flag.Int("timeout", 5, "Connection and request timeout")
 
 	flag.Parse()
 	scanner := newScanner(*timeout)
