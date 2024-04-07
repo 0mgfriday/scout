@@ -66,7 +66,7 @@ func (scan scanner) getWithRetry(url string, attempts int, impersonateBrowser bo
 		}
 	}
 
-	// fallback to ther protocol
+	// fallback to other protocol
 	rsp, err := scan.doFallbackRequest(req)
 	if err == nil {
 		return rsp, nil
