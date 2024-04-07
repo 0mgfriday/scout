@@ -48,12 +48,13 @@ func (scan scanner) Scan(u string, impersonateBrowser bool) (*Report, error) {
 	}
 
 	IPs, _ := net.LookupIP(uri.Host)
-	return reportFromResponse(uri.String(), IPs, rsp), nil
+	return reportFromResponse(rsp.Request.URL.String(), IPs, rsp), nil
 }
 
 func (scan scanner) getWithRetry(url string, attempts int, impersonateBrowser bool) (*http.Response, error) {
+	req, err := createReq(url, impersonateBrowser)
+
 	for i := 1; i <= attempts; i++ {
-		req, err := createReq(url, impersonateBrowser)
 		if err != nil {
 			continue
 		}
@@ -62,12 +63,28 @@ func (scan scanner) getWithRetry(url string, attempts int, impersonateBrowser bo
 
 		if err == nil {
 			return rsp, nil
-		} else if i == attempts {
-			return nil, err
 		}
 	}
 
+	// fallback to ther protocol
+	rsp, err := scan.doFallbackRequest(req)
+	if err == nil {
+		return rsp, nil
+	}
+
 	return nil, errors.New("request failed")
+}
+
+func (scan scanner) doFallbackRequest(req *http.Request) (*http.Response, error) {
+	if req.URL.Scheme == "https" {
+		req.URL.Scheme = "http"
+
+		return scan.client.Do(req)
+	} else {
+		req.URL.Scheme = "https"
+
+		return scan.client.Do(req)
+	}
 }
 
 func createReq(url string, impersonateBrowser bool) (*http.Request, error) {
