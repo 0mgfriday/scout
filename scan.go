@@ -10,7 +10,7 @@ import (
 func Scan(u string) (*Report, error) {
 	uri, err := url.ParseRequestURI(u)
 	if err != nil {
-		return nil, errors.New("Invalid url")
+		return nil, errors.New("invalid url")
 	}
 
 	client := &http.Client{
