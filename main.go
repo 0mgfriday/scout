@@ -1,41 +1,66 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
+	"flag"
 	"fmt"
-	"net"
-	"net/http"
-	"net/url"
 	"os"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: scout https://example.com")
+	u := flag.String("u", "", "Target URL")
+	l := flag.String("l", "", "File with list of target URLs")
+
+	flag.Parse()
+
+	if *u != "" {
+		result, err := Scan(*u)
+		if err == nil {
+			prettyPrintAsJson(result)
+		} else {
+			fmt.Println(err)
+		}
+	} else if *l != "" {
+		if _, err := os.Stat(*l); err == nil {
+			readFile, err := os.Open(*l)
+
+			if err != nil {
+				fmt.Println(err)
+			}
+			fileScanner := bufio.NewScanner(readFile)
+
+			fileScanner.Split(bufio.ScanLines)
+
+			for fileScanner.Scan() {
+				result, err := Scan(fileScanner.Text())
+				if err == nil {
+					printAsJson(result)
+				}
+			}
+
+			readFile.Close()
+		} else if errors.Is(err, os.ErrNotExist) {
+			fmt.Println("File " + *l + " does not exist")
+		}
+	} else {
+		fmt.Println("Must provide -u or -l parameter. -h for more details")
 		os.Exit(0)
 	}
+}
 
-	u, err := url.ParseRequestURI(os.Args[1])
+func printAsJson(obj any) {
+	j, err := json.Marshal(obj)
 	if err != nil {
-		fmt.Println("Invalid url")
-		os.Exit(0)
+		fmt.Println(err)
+		return
 	}
+	fmt.Println(string(j))
+}
 
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	resp, err := client.Get(u.String())
-	if err != nil {
-		panic(err)
-	}
-
-	IPs, _ := net.LookupIP(u.Host)
-	result := reportFromResponse(u.String(), IPs, resp)
-
-	j, err := json.MarshalIndent(result, "", "    ")
+func prettyPrintAsJson(obj any) {
+	j, err := json.MarshalIndent(obj, "", "    ")
 	if err != nil {
 		fmt.Println(err)
 		return
