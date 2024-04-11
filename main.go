@@ -10,34 +10,32 @@ import (
 	"sync"
 )
 
-var printLock sync.Mutex
-var fileLock sync.Mutex
-
 func main() {
-	u := flag.String("u", "", "Target URL")
-	l := flag.String("l", "", "File with list of target URLs")
-	i := flag.Bool("i", false, "Impersonate browser when sending requests")
+	targetUrl := flag.String("u", "", "Target URL")
+	targetList := flag.String("l", "", "File with list of target URLs")
+	impersonate := flag.Bool("i", false, "Impersonate browser when sending requests")
 	timeout := flag.Int("timeout", 5, "Connection and request timeout")
 	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
 	outputFile := flag.String("o", "", "File to write results to")
 
 	flag.Parse()
-	scanner := newScanner(*timeout, *i)
+	scanner := newScanner(*timeout, *impersonate)
 
-	if *u != "" {
-		result, err := scanner.Scan(*u)
+	if *targetUrl != "" {
+		result, err := scanner.Scan(*targetUrl)
 		if err == nil {
 			prettyPrintAsJson(result)
 		} else {
 			fmt.Println(err)
 		}
-	} else if *l != "" {
-		if _, err := os.Stat(*l); err == nil {
-			wordList, err := os.Open(*l)
-
+	} else if *targetList != "" {
+		if _, err := os.Stat(*targetList); err == nil {
+			wordList, err := os.Open(*targetList)
 			if err != nil {
 				fmt.Println(err)
 			}
+			defer wordList.Close()
+
 			wordListScanner := bufio.NewScanner(wordList)
 
 			if *outputFile != "" {
@@ -46,9 +44,8 @@ func main() {
 				scanToStdOut(*scanner, *wordListScanner, *maxThreads)
 			}
 
-			wordList.Close()
 		} else if errors.Is(err, os.ErrNotExist) {
-			fmt.Println("File " + *l + " does not exist")
+			fmt.Println("File " + *targetList + " does not exist")
 		}
 	} else {
 		fmt.Println("Must provide -u or -l parameter. -h for more details")
@@ -96,9 +93,7 @@ func scanToStdOutWorker(wg *sync.WaitGroup, requestQueue chan string, scanner sc
 	for item := range requestQueue {
 		result, err := scanner.Scan(item)
 		if err == nil {
-			printLock.Lock()
 			printAsJson(result)
-			printLock.Unlock()
 		}
 	}
 }
@@ -108,6 +103,7 @@ func scanToFile(scanner scanner, wordListScanner bufio.Scanner, outfile string, 
 	if err != nil {
 		return errors.New("failed to create file " + outfile)
 	}
+	defer f.Close()
 
 	completed := 0
 	requestQueue := make(chan string, maxThreads)
@@ -122,7 +118,6 @@ func scanToFile(scanner scanner, wordListScanner bufio.Scanner, outfile string, 
 	}
 	close(requestQueue)
 	wg.Wait()
-	f.Close()
 
 	return nil
 }
@@ -137,9 +132,7 @@ func scanToFileWorker(wg *sync.WaitGroup, requestQueue chan string, scanner scan
 				fmt.Println(err)
 			}
 
-			fileLock.Lock()
 			fmt.Fprintln(file, string(j))
-			fileLock.Unlock()
 		}
 
 		*completed++

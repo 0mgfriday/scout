@@ -41,7 +41,7 @@ func (scan scanner) Scan(u string) (*Report, error) {
 	}
 	uri, err := url.ParseRequestURI(u)
 	if err != nil {
-		return nil, errors.New("invalid url")
+		return nil, errors.New("invalid url " + u)
 	}
 
 	rsp, err := scan.getWithRetry(uri.String(), 2)
