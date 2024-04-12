@@ -113,6 +113,8 @@ func getWappalyzerResult(header http.Header, body []byte) string {
 		for f := range fingerprints {
 			tech += f + ", "
 		}
+	} else {
+		fmt.Println(err)
 	}
 
 	return strings.TrimSuffix(tech, ", ")

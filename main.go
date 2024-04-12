@@ -100,6 +100,8 @@ func scanToStdOutWorker(wg *sync.WaitGroup, requestQueue chan string, scanner sc
 		result, err := scanner.Scan(item)
 		if err == nil {
 			printAsJson(result)
+		} else {
+			fmt.Println(err)
 		}
 	}
 }

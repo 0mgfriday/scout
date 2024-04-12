@@ -55,7 +55,7 @@ func (scan scanner) Scan(u string) (*Report, error) {
 
 	rsp, err := scan.getWithRetry(uri.String(), 2)
 	if err != nil {
-		return nil, errors.New("request failed")
+		return nil, err
 	}
 
 	IPs, _ := net.LookupIP(uri.Host)
@@ -83,7 +83,7 @@ func (scan scanner) getWithRetry(url string, attempts int) (*http.Response, erro
 		return rsp, nil
 	}
 
-	return nil, errors.New("request failed")
+	return nil, errors.New("request failed: " + err.Error())
 }
 
 func (scan scanner) doFallbackRequest(req *http.Request) (*http.Response, error) {
@@ -101,7 +101,7 @@ func (scan scanner) doFallbackRequest(req *http.Request) (*http.Response, error)
 func (scan scanner) createReq(url string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, err
 	}
 
 	if scan.impersonateBrowser {
