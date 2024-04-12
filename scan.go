@@ -15,7 +15,7 @@ type scanner struct {
 	impersonateBrowser bool
 }
 
-func newScanner(timeout int, impersonateBrowser bool) *scanner {
+func newScanner(timeout int, impersonateBrowser bool, proxy string) (*scanner, error) {
 	newScanner := scanner{
 		client: http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -32,7 +32,16 @@ func newScanner(timeout int, impersonateBrowser bool) *scanner {
 		impersonateBrowser: impersonateBrowser,
 	}
 
-	return &newScanner
+	if proxy != "" {
+		proxyUrl, err := url.Parse(proxy)
+		if err == nil && proxyUrl.Scheme != "" {
+			newScanner.client.Transport.(*http.Transport).Proxy = http.ProxyURL(proxyUrl)
+		} else {
+			return nil, errors.New("Invalid proxy URL: " + proxy)
+		}
+	}
+
+	return &newScanner, nil
 }
 
 func (scan scanner) Scan(u string) (*Report, error) {

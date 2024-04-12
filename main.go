@@ -17,9 +17,15 @@ func main() {
 	timeout := flag.Int("timeout", 5, "Connection and request timeout")
 	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
 	outputFile := flag.String("o", "", "File to write results to")
+	proxy := flag.String("proxy", "", "Proxy URL")
 
 	flag.Parse()
-	scanner := newScanner(*timeout, *impersonate)
+
+	scanner, err := newScanner(*timeout, *impersonate, *proxy)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(0)
+	}
 
 	if *targetUrl != "" {
 		result, err := scanner.Scan(*targetUrl)
