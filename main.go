@@ -18,6 +18,7 @@ func main() {
 	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
 	outputFile := flag.String("o", "", "File to write results to")
 	proxy := flag.String("proxy", "", "Proxy URL")
+	jsonOutput := flag.Bool("json", false, "Output as JSON for single URL scan (list always outputs JSON)")
 
 	flag.Parse()
 
@@ -30,7 +31,11 @@ func main() {
 	if *targetUrl != "" {
 		result, err := scanner.Scan(*targetUrl)
 		if err == nil {
-			prettyPrintAsJson(result)
+			if *jsonOutput {
+				prettyPrintAsJson(result)
+			} else {
+				printReport(*result)
+			}
 		} else {
 			fmt.Println(err)
 		}
@@ -57,24 +62,6 @@ func main() {
 		fmt.Println("Must provide -u or -l parameter. -h for more details")
 		os.Exit(0)
 	}
-}
-
-func printAsJson(obj any) {
-	j, err := json.Marshal(obj)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(j))
-}
-
-func prettyPrintAsJson(obj any) {
-	j, err := json.MarshalIndent(obj, "", "    ")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(j))
 }
 
 func scanToStdOut(scanner scanner, wordListScanner bufio.Scanner, maxThreads int) {
