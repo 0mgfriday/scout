@@ -93,7 +93,7 @@ func getTitle(s string) string {
 
 func getJSFiles(s string) []string {
 	files := []string{}
-	r := regexp.MustCompile(`<script src="(?P<Src>[\w\/\-.]{1,200})["?]`)
+	r := regexp.MustCompile(`src="(?P<Src>[\w:\/\-.]{1,200}\.js)["?]`)
 	matches := r.FindAllStringSubmatch(s, -1)
 	for _, match := range matches {
 		index := r.SubexpIndex("Src")
