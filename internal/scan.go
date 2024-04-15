@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"crypto/tls"
@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-type scanner struct {
+type Scanner struct {
 	client             http.Client
 	impersonateBrowser bool
 }
 
-func newScanner(timeout int, impersonateBrowser bool, proxy string) (*scanner, error) {
-	newScanner := scanner{
+func NewScanner(timeout int, impersonateBrowser bool, proxy string) (*Scanner, error) {
+	newScanner := Scanner{
 		client: http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -44,7 +44,7 @@ func newScanner(timeout int, impersonateBrowser bool, proxy string) (*scanner, e
 	return &newScanner, nil
 }
 
-func (scan scanner) Scan(u string) (*Report, error) {
+func (scan Scanner) Scan(u string) (*Report, error) {
 	if !strings.HasPrefix(u, "http") {
 		u = "https://" + u
 	}
@@ -62,7 +62,7 @@ func (scan scanner) Scan(u string) (*Report, error) {
 	return reportFromResponse(rsp.Request.URL.String(), IPs, rsp), nil
 }
 
-func (scan scanner) getWithRetry(url string, attempts int) (*http.Response, error) {
+func (scan Scanner) getWithRetry(url string, attempts int) (*http.Response, error) {
 	req, err := scan.createReq(url)
 
 	for i := 1; i <= attempts; i++ {
@@ -86,7 +86,7 @@ func (scan scanner) getWithRetry(url string, attempts int) (*http.Response, erro
 	return nil, errors.New("request failed: " + err.Error())
 }
 
-func (scan scanner) doFallbackRequest(req *http.Request) (*http.Response, error) {
+func (scan Scanner) doFallbackRequest(req *http.Request) (*http.Response, error) {
 	if req.URL.Scheme == "https" {
 		req.URL.Scheme = "http"
 
@@ -98,7 +98,7 @@ func (scan scanner) doFallbackRequest(req *http.Request) (*http.Response, error)
 	}
 }
 
-func (scan scanner) createReq(url string) (*http.Request, error) {
+func (scan Scanner) createReq(url string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

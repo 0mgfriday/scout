@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"omg/scout/internal"
 	"os"
 	"sync"
 )
 
-func scanToStdOut(scanner scanner, wordListScanner bufio.Scanner, maxThreads int) {
+func scanToStdOut(scanner internal.Scanner, wordListScanner bufio.Scanner, maxThreads int) {
 	requestQueue := make(chan string, maxThreads)
 	wg := &sync.WaitGroup{}
 	for i := 0; i < maxThreads; i++ {
@@ -26,7 +27,7 @@ func scanToStdOut(scanner scanner, wordListScanner bufio.Scanner, maxThreads int
 	wg.Wait()
 }
 
-func scanToStdOutWorker(wg *sync.WaitGroup, requestQueue chan string, scanner scanner) {
+func scanToStdOutWorker(wg *sync.WaitGroup, requestQueue chan string, scanner internal.Scanner) {
 	defer wg.Done()
 	for item := range requestQueue {
 		result, err := scanner.Scan(item)
@@ -38,7 +39,7 @@ func scanToStdOutWorker(wg *sync.WaitGroup, requestQueue chan string, scanner sc
 	}
 }
 
-func scanToFile(scanner scanner, wordListScanner bufio.Scanner, outfile string, maxThreads int) error {
+func scanToFile(scanner internal.Scanner, wordListScanner bufio.Scanner, outfile string, maxThreads int) error {
 	f, err := os.Create(outfile)
 	if err != nil {
 		return errors.New("failed to create file " + outfile)
@@ -62,7 +63,7 @@ func scanToFile(scanner scanner, wordListScanner bufio.Scanner, outfile string, 
 	return nil
 }
 
-func scanToFileWorker(wg *sync.WaitGroup, requestQueue chan string, scanner scanner, file *os.File, completed *int) {
+func scanToFileWorker(wg *sync.WaitGroup, requestQueue chan string, scanner internal.Scanner, file *os.File, completed *int) {
 	defer wg.Done()
 	for item := range requestQueue {
 		result, err := scanner.Scan(item)

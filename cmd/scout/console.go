@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"omg/scout/internal"
 	"strconv"
 	"strings"
 )
@@ -27,7 +28,7 @@ func prettyPrintAsJson(obj any) {
 
 const LabelColor = "\033[1;36m%s\033[0m"
 
-func printReport(r Report) {
+func printReport(r internal.Report) {
 	printValue("URL", r.Url)
 	printValue("IPs", strings.Join(r.IPs, ", "))
 	printValue("TLS.Subject", r.TLS.SubjectCommonName)

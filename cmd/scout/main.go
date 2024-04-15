@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"omg/scout/internal"
 	"os"
 )
 
@@ -20,7 +21,7 @@ func main() {
 
 	flag.Parse()
 
-	scanner, err := newScanner(*timeout, *impersonate, *proxy)
+	scanner, err := internal.NewScanner(*timeout, *impersonate, *proxy)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
