@@ -1,4 +1,4 @@
-module omg/scout
+module github.com/0mgfriday/scout
 
 go 1.19
 

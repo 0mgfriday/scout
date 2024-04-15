@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"omg/scout/internal"
 	"strconv"
 	"strings"
+
+	"github.com/0mgfriday/scout/internal"
 )
 
 func printAsJson(obj any) {

@@ -5,8 +5,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"omg/scout/internal"
 	"os"
+
+	"github.com/0mgfriday/scout/internal"
 )
 
 func main() {

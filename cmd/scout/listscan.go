@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"omg/scout/internal"
 	"os"
 	"sync"
+
+	"github.com/0mgfriday/scout/internal"
 )
 
 func scanToStdOut(scanner internal.Scanner, wordListScanner bufio.Scanner, maxThreads int) {
