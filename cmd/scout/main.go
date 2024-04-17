@@ -14,7 +14,7 @@ func main() {
 	targetUrl := flag.String("u", "", "Target URL")
 	targetList := flag.String("l", "", "File with list of target URLs")
 	impersonate := flag.Bool("i", false, "Impersonate browser when sending requests")
-	timeout := flag.Int("timeout", 5, "Connection and request timeout")
+	timeout := flag.Int("timeout", 5, "Connection and request timeout in seconds")
 	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
 	outputFile := flag.String("o", "", "File to write results to")
 	proxy := flag.String("proxy", "", "Proxy URL")
