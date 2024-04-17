@@ -1,6 +1,11 @@
 # Scout
 Collect basic info on a URL (or List of them) such as TLS info, IPs, headers and a list of javascript files.
 
+# Installation
+```
+go install -v github.com/0mgfriday/scout/cmd/scout@latest
+```
+
 # Usage
 ```
 Usage of scout:
@@ -20,3 +25,5 @@ Usage of scout:
   -u string
         Target URL
 ```
+
+![img](doc/output.png)
