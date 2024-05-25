@@ -100,7 +100,9 @@ func getJSFiles(s string) []string {
 	for _, match := range matches {
 		index := r.SubexpIndex("Src")
 		if index != -1 {
-			files = append(files, match[index])
+			if !isNoiseyJSFile(match[index]) {
+				files = append(files, match[index])
+			}
 		}
 	}
 

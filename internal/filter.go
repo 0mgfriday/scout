@@ -22,3 +22,21 @@ func isNoiseyHeader(header string) bool {
 	_, ok := excludeHeaders[strings.ToLower(header)]
 	return ok
 }
+
+var excludeJavaScript = [...]string{
+	"google_tag.script.js",
+	"googletagmanager",
+	"gtag.js",
+	"optimizely",
+	"ruxitagentjs",
+}
+
+func isNoiseyJSFile(file string) bool {
+	for _, exclusion := range excludeJavaScript {
+		if strings.Contains(file, exclusion) {
+			return true
+		}
+	}
+
+	return false
+}
