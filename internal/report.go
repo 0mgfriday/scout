@@ -68,8 +68,10 @@ func IPsToString(IPs []net.IP) []string {
 func headersToMap(header http.Header) map[string]string {
 	headers := make(map[string]string)
 	for name, values := range header {
-		for _, val := range values {
-			headers[name] = val // just replace if multiple for now
+		if !isNoiseyHeader(name) {
+			for _, val := range values {
+				headers[name] = val // just replace if multiple for now
+			}
 		}
 	}
 
