@@ -16,7 +16,7 @@ func main() {
 	impersonate := flag.Bool("i", false, "Impersonate browser when sending requests")
 	timeout := flag.Int("timeout", 5, "Connection and request timeout in seconds")
 	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
-	outputFile := flag.String("o", "", "File to write results to")
+	outputFilePath := flag.String("o", "", "File to write results to")
 	proxy := flag.String("proxy", "", "Proxy URL")
 	jsonOutput := flag.Bool("json", false, "Output as JSON for single URL scan (list always outputs JSON)")
 
@@ -40,6 +40,7 @@ func main() {
 			fmt.Println(err)
 		}
 	} else if *targetList != "" {
+		multiScanner := internal.NewMultiScanner(*scanner)
 		if _, err := os.Stat(*targetList); err == nil {
 			wordList, err := os.Open(*targetList)
 			if err != nil {
@@ -48,11 +49,32 @@ func main() {
 			defer wordList.Close()
 
 			wordListScanner := bufio.NewScanner(wordList)
+			wordListScanner.Split(bufio.ScanLines)
 
-			if *outputFile != "" {
-				scanToFile(*scanner, *wordListScanner, *outputFile, *maxThreads)
+			var lines []string
+			for wordListScanner.Scan() {
+				lines = append(lines, wordListScanner.Text())
+			}
+
+			outputQueue := make(chan internal.Report)
+			go multiScanner.Scan(lines, outputQueue, *maxThreads)
+
+			var output Output
+			if *outputFilePath != "" {
+				outFile, err := os.Create(*outputFilePath)
+				if err != nil {
+					fmt.Println("failed to create file " + *outputFilePath)
+					os.Exit(0)
+				}
+				defer outFile.Close()
+
+				output = NewFileOutput(outFile)
 			} else {
-				scanToStdOut(*scanner, *wordListScanner, *maxThreads)
+				output = NewConsoleOutput()
+			}
+
+			for item := range outputQueue {
+				output.OutputReport(item)
 			}
 
 		} else if errors.Is(err, os.ErrNotExist) {
