@@ -13,6 +13,7 @@ import (
 func main() {
 	targetUrl := flag.String("u", "", "Target URL")
 	targetList := flag.String("l", "", "File with list of target URLs")
+	discovery := flag.Bool("d", false, "Discover and scan new in-scope domains")
 	impersonate := flag.Bool("i", false, "Impersonate browser when sending requests")
 	timeout := flag.Int("timeout", 5, "Connection and request timeout in seconds")
 	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
@@ -40,7 +41,15 @@ func main() {
 			fmt.Println(err)
 		}
 	} else if *targetList != "" {
+		var multiScan internal.MultiScan
 		multiScanner := internal.NewMultiScanner(*scanner)
+
+		if *discovery {
+			multiScan = internal.NewDiscoverScanner(multiScanner, make(map[string]bool))
+		} else {
+			multiScan = multiScanner
+		}
+
 		if _, err := os.Stat(*targetList); err == nil {
 			wordList, err := os.Open(*targetList)
 			if err != nil {
@@ -57,7 +66,7 @@ func main() {
 			}
 
 			outputQueue := make(chan internal.Report)
-			go multiScanner.Scan(lines, outputQueue, *maxThreads)
+			go multiScan.Scan(lines, outputQueue, *maxThreads)
 
 			var output Output
 			if *outputFilePath != "" {
