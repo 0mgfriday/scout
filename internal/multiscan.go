@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -43,8 +42,6 @@ func (multi MultiScanner) scanWorker(wg *sync.WaitGroup, requestQueue chan strin
 		result, err := multi.scan.Scan(item)
 		if err == nil {
 			outputQueue <- *result
-		} else {
-			fmt.Println(err)
 		}
 	}
 }
