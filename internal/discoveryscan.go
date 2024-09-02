@@ -19,7 +19,7 @@ func NewDiscoverScanner(multiScanner *MultiScanner, scope []string) *DiscoverySc
 	}
 }
 
-func (discovery DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report, maxThreads int) {
+func (discovery *DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report, maxThreads int) {
 	for _, u := range urls {
 		discovery.seenUrls[trimProtocol(u)] = true
 	}
@@ -53,7 +53,7 @@ func (discovery DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report,
 	close(outputQueue)
 }
 
-func (discover DiscoveryScanner) InScope(domain string) bool {
+func (discover *DiscoveryScanner) InScope(domain string) bool {
 	for _, s := range discover.scope {
 		if strings.HasSuffix(domain, s) {
 			return true
