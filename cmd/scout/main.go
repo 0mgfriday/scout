@@ -12,7 +12,7 @@ import (
 func main() {
 	targetUrl := flag.String("u", "", "Target URL")
 	targetList := flag.String("l", "", "File with list of target URLs")
-	scopeList := flag.String("sl", "", "File with list of in-scope URLs")
+	scopeList := flag.String("sl", "", "File with list of in-scope URLs for discovery")
 	discovery := flag.Bool("d", false, "Discover and scan new in-scope domains")
 	impersonate := flag.Bool("i", false, "Impersonate browser when sending requests")
 	timeout := flag.Int("timeout", 5, "Connection and request timeout in seconds")
