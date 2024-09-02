@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -32,8 +33,10 @@ func (discovery DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report,
 		for item := range multiScanOutputQueue {
 			var foundDomains []string
 			outputQueue <- item
-			certDomains := getDomainsFromCert(item)
-			foundDomains = append(foundDomains, certDomains...)
+			foundDomains = append(foundDomains, getDomainsFromCert(item)...)
+			if _, ok := item.Headers["Content-Security-Policy"]; ok {
+				foundDomains = append(foundDomains, getDomainsFromCSP(item.Headers["Content-Security-Policy"])...)
+			}
 
 			for _, d := range foundDomains {
 				if !discovery.seenUrls[d] {
@@ -71,6 +74,11 @@ func getDomainsFromCert(report Report) []string {
 	}
 
 	return domains
+}
+
+func getDomainsFromCSP(csp string) []string {
+	r := regexp.MustCompile(`[\w-]+\.[\w.-]+`)
+	return r.FindAllString(csp, -1)
 }
 
 func trimProtocol(s string) string {
