@@ -9,6 +9,7 @@ go install -v github.com/0mgfriday/scout/cmd/scout@latest
 # Usage
 ```
 Usage of scout:
+  -d    Discover and scan new in-scope domains
   -i    Impersonate browser when sending requests
   -json
         Output as JSON for single URL scan (list always outputs JSON)
@@ -18,10 +19,12 @@ Usage of scout:
         File to write results to
   -proxy string
         Proxy URL
+  -sl string
+        File with list of in-scope URLs for discovery
   -threads int
         Max number of threads to use for requests (default 1)
   -timeout int
-        Connection and request timeout (default 5)
+        Connection and request timeout in seconds (default 5)
   -u string
         Target URL
 ```
