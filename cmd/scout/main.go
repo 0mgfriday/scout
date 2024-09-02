@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"flag"
 	"fmt"
@@ -48,7 +47,7 @@ func main() {
 		if *discovery {
 			scope := []string{}
 			if *scopeList != "" {
-				scope, err = ReadScopeFile(*scopeList)
+				scope, err = ReadFileLines(*scopeList)
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(0)
@@ -59,23 +58,11 @@ func main() {
 			multiScan = multiScanner
 		}
 
-		if _, err := os.Stat(*targetList); err == nil {
-			wordList, err := os.Open(*targetList)
-			if err != nil {
-				fmt.Println(err)
-			}
-			defer wordList.Close()
-
-			wordListScanner := bufio.NewScanner(wordList)
-			wordListScanner.Split(bufio.ScanLines)
-
-			var lines []string
-			for wordListScanner.Scan() {
-				lines = append(lines, wordListScanner.Text())
-			}
+		targets, err := ReadFileLines(*targetList)
+		if err == nil {
 
 			outputQueue := make(chan internal.Report)
-			go multiScan.Scan(lines, outputQueue, *maxThreads)
+			go multiScan.Scan(targets, outputQueue, *maxThreads)
 
 			var output Output
 			if *outputFilePath != "" {

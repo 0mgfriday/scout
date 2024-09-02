@@ -1,21 +1,29 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"os"
-	"strings"
 )
 
-func ReadScopeFile(filePath string) ([]string, error) {
+func ReadFileLines(filePath string) ([]string, error) {
 	if _, err := os.Stat(filePath); err == nil {
-		content, err := os.ReadFile(filePath)
+		file, err := os.Open(filePath)
 		if err != nil {
-			return nil, errors.New("Unable to read scope file " + filePath)
+			return nil, err
+		}
+		defer file.Close()
+
+		wordListScanner := bufio.NewScanner(file)
+		wordListScanner.Split(bufio.ScanLines)
+
+		var lines []string
+		for wordListScanner.Scan() {
+			lines = append(lines, wordListScanner.Text())
 		}
 
-		lines := strings.Split(string(content), "\n")
 		return lines, nil
 	} else {
-		return nil, errors.New("Scope file " + filePath + " does not exist")
+		return nil, errors.New("File " + filePath + " does not exist")
 	}
 }
