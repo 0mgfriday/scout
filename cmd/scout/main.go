@@ -13,6 +13,7 @@ import (
 func main() {
 	targetUrl := flag.String("u", "", "Target URL")
 	targetList := flag.String("l", "", "File with list of target URLs")
+	scopeList := flag.String("sl", "", "File with list of in-scope URLs")
 	discovery := flag.Bool("d", false, "Discover and scan new in-scope domains")
 	impersonate := flag.Bool("i", false, "Impersonate browser when sending requests")
 	timeout := flag.Int("timeout", 5, "Connection and request timeout in seconds")
@@ -45,7 +46,15 @@ func main() {
 		multiScanner := internal.NewMultiScanner(*scanner)
 
 		if *discovery {
-			multiScan = internal.NewDiscoverScanner(multiScanner, make(map[string]bool))
+			scope := []string{}
+			if *scopeList != "" {
+				scope, err = ReadScopeFile(*scopeList)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(0)
+				}
+			}
+			multiScan = internal.NewDiscoverScanner(multiScanner, scope)
 		} else {
 			multiScan = multiScanner
 		}

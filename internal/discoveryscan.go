@@ -6,11 +6,11 @@ import (
 
 type DiscoveryScanner struct {
 	multiScan *MultiScanner
-	scope     map[string]bool
+	scope     []string
 	seenUrls  map[string]bool
 }
 
-func NewDiscoverScanner(multiScanner *MultiScanner, scope map[string]bool) *DiscoveryScanner {
+func NewDiscoverScanner(multiScanner *MultiScanner, scope []string) *DiscoveryScanner {
 	return &DiscoveryScanner{
 		multiScan: multiScanner,
 		scope:     scope,
@@ -37,8 +37,10 @@ func (discovery DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report,
 
 			for _, d := range foundDomains {
 				if !discovery.seenUrls[d] {
-					discovery.seenUrls[d] = true
-					newTargets = append(newTargets, d)
+					if discovery.InScope(d) {
+						discovery.seenUrls[d] = true
+						newTargets = append(newTargets, d)
+					}
 				}
 			}
 		}
@@ -46,6 +48,16 @@ func (discovery DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report,
 		targetUrls = &newTargets
 	}
 	close(outputQueue)
+}
+
+func (discover DiscoveryScanner) InScope(domain string) bool {
+	for _, s := range discover.scope {
+		if strings.HasSuffix(domain, s) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func getDomainsFromCert(report Report) []string {
