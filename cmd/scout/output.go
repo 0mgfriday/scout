@@ -24,24 +24,28 @@ func (consoleOut ConsoleOutput) OutputReport(report internal.Report) {
 }
 
 type FileOutput struct {
-	file *os.File
+	file  *os.File
+	count int32
 }
 
 func NewFileOutput(file *os.File) *FileOutput {
 	return &FileOutput{
-		file: file,
+		file:  file,
+		count: 0,
 	}
 }
 
-func (fileOut FileOutput) OutputReport(report internal.Report) {
+func (fileOut *FileOutput) OutputReport(report internal.Report) {
 	j, err := json.Marshal(report)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	fmt.Fprintln(fileOut.file, string(j))
+	fileOut.count++
+	fmt.Printf("\r%d scan results collected", fileOut.count)
 }
 
-func (fileOut FileOutput) Close() {
+func (fileOut *FileOutput) Close() {
 	fileOut.file.Close()
 }
