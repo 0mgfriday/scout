@@ -49,3 +49,18 @@ func (fileOut *FileOutput) OutputReport(report internal.Report) {
 func (fileOut *FileOutput) Close() {
 	fileOut.file.Close()
 }
+
+func GetOutput(outputFilePath string) Output {
+	if outputFilePath != "" {
+		outFile, err := os.Create(outputFilePath)
+		if err != nil {
+			fmt.Println("failed to create file " + outputFilePath)
+			os.Exit(0)
+		}
+		defer outFile.Close()
+
+		return NewFileOutput(outFile)
+	} else {
+		return NewConsoleOutput()
+	}
+}
