@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Scanner struct {
@@ -120,7 +122,7 @@ func (scan Scanner) createReq(url string) (*http.Request, error) {
 	}
 
 	if scan.checkCORS {
-		req.Header.Add("Origin", "https://example.com")
+		req.Header.Add("Origin", "https://"+uuid.New().String()+".com")
 	}
 
 	return req, nil
