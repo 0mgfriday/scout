@@ -15,6 +15,7 @@ func main() {
 	scopeList := flag.String("sl", "", "File with list of in-scope URLs for discovery")
 	discovery := flag.Bool("d", false, "Discover and scan new in-scope domains")
 	impersonate := flag.Bool("i", false, "Impersonate browser when sending requests")
+	checkCORS := flag.Bool("cors", false, "Probe for CORS response headers")
 	timeout := flag.Int("timeout", 5, "Connection and request timeout in seconds")
 	maxThreads := flag.Int("threads", 1, "Max number of threads to use for requests")
 	outputFilePath := flag.String("o", "", "File to write results to")
@@ -23,7 +24,7 @@ func main() {
 
 	flag.Parse()
 
-	scanner, err := internal.NewScanner(*timeout, *impersonate, *proxy)
+	scanner, err := internal.NewScanner(*timeout, *impersonate, *proxy, *checkCORS)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)

@@ -9,6 +9,8 @@ go install -v github.com/0mgfriday/scout/cmd/scout@latest
 # Usage
 ```
 Usage of scout:
+  -cors
+        Probe for CORS response headers
   -d    Discover and scan new in-scope domains
   -i    Impersonate browser when sending requests
   -json
