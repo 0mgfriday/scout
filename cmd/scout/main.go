@@ -35,8 +35,8 @@ func main() {
 	}
 
 	if *targetUrl != "" {
-		SingleTargetScan(*scanner, *targetUrl, *jsonOutput)
+		singleTargetScan(*scanner, *targetUrl, *jsonOutput)
 	} else if *targetList != "" {
-		MultiTargetScan(*scanner, *targetList, *scopeList, *outputFilePath, *discovery, *maxThreads)
+		multiTargetScan(*scanner, *targetList, *scopeList, *outputFilePath, *discovery, *maxThreads)
 	}
 }

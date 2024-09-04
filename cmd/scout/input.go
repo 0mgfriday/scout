@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func ReadFileLines(filePath string) ([]string, error) {
+func readFileLines(filePath string) ([]string, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		file, err := os.Open(filePath)
 		if err != nil {

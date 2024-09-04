@@ -8,7 +8,7 @@ import (
 	"github.com/0mgfriday/scout/internal"
 )
 
-func SingleTargetScan(scanner internal.Scanner, targetUrl string, jsonOutput bool) {
+func singleTargetScan(scanner internal.Scanner, targetUrl string, jsonOutput bool) {
 	result, err := scanner.Scan(targetUrl)
 	if err != nil {
 		fmt.Println(err)
@@ -22,18 +22,18 @@ func SingleTargetScan(scanner internal.Scanner, targetUrl string, jsonOutput boo
 	}
 }
 
-func MultiTargetScan(scanner internal.Scanner, targetList string, scopeList string, outputFilePath string, discovery bool, maxThreads int) {
+func multiTargetScan(scanner internal.Scanner, targetList string, scopeList string, outputFilePath string, discovery bool, maxThreads int) {
 	multiScan := getMultiScanner(scanner, discovery, scopeList)
-	targets, err := ReadFileLines(targetList)
+	targets, err := readFileLines(targetList)
 	if err == nil {
 
 		outputQueue := make(chan internal.Report)
 		go multiScan.Scan(targets, outputQueue, maxThreads)
 
-		output := GetOutput(outputFilePath)
+		output := getOutput(outputFilePath)
 
 		for item := range outputQueue {
-			output.OutputReport(item)
+			output.outputReport(item)
 		}
 
 	} else if errors.Is(err, os.ErrNotExist) {
@@ -48,7 +48,7 @@ func getMultiScanner(scanner internal.Scanner, discovery bool, scopeListFilePath
 		var scope []string
 		var err error
 		if scopeListFilePath != "" {
-			scope, err = ReadFileLines(scopeListFilePath)
+			scope, err = readFileLines(scopeListFilePath)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(0)
