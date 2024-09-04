@@ -1,8 +1,9 @@
 module github.com/0mgfriday/scout
 
-go 1.19
+go 1.21
 
-require (
-	github.com/projectdiscovery/wappalyzergo v0.0.116 // indirect
-	golang.org/x/net v0.21.0 // indirect
-)
+toolchain go1.23.0
+
+require github.com/projectdiscovery/wappalyzergo v0.1.17
+
+require golang.org/x/net v0.26.0 // indirect
