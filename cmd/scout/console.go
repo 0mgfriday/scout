@@ -41,14 +41,25 @@ func printReport(r internal.Report) {
 	printValue("Title", r.Title)
 	printValue("Wappalyzer", r.Wappalyzer)
 
-	headersOut, _ := json.MarshalIndent(r.Headers, "", "    ")
-	printValue("Headers", string(headersOut))
+	printJsonValue("Headers", r.Headers)
+	printJsonValue("JSFiles", r.JSFiles)
+}
 
-	jsFileOut, _ := json.MarshalIndent(r.JSFiles, "", "    ")
-	printValue("JSFiles", string(jsFileOut))
+func printJsonValue(label string, value any) {
+	jsonOut, _ := json.MarshalIndent(value, "", "    ")
+	fmt.Printf(LabelColor, label)
+	fmt.Println(": " + string(jsonOut))
 }
 
 func printValue(label string, value string) {
 	fmt.Printf(LabelColor, label)
-	fmt.Println(": " + value)
+	fmt.Println(": " + escapeBadCharacters(value))
+}
+
+func escapeBadCharacters(s string) string {
+	r := fmt.Sprintf("%q", s)
+	r = strings.TrimPrefix(r, "\"")
+	r = strings.TrimSuffix(r, "\"")
+
+	return strings.ReplaceAll(r, "\\\"", "\"")
 }
