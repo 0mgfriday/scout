@@ -25,7 +25,7 @@ type Report struct {
 func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response) *Report {
 	report := Report{
 		Url:    url,
-		IPs:    IPsToString(IPAddresses),
+		IPs:    ipsToString(IPAddresses),
 		Status: rsp.StatusCode,
 	}
 
@@ -54,7 +54,7 @@ func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response) *R
 	return &report
 }
 
-func IPsToString(IPs []net.IP) []string {
+func ipsToString(IPs []net.IP) []string {
 	result := []string{}
 	for _, IP := range IPs {
 		if ipv4 := IP.To4(); ipv4 != nil {

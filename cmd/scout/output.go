@@ -8,34 +8,34 @@ import (
 	"github.com/0mgfriday/scout/internal"
 )
 
-type Output interface {
-	OutputReport(report internal.Report)
+type output interface {
+	outputReport(report internal.Report)
 }
 
-type ConsoleOutput struct {
+type consoleOutput struct {
 }
 
-func NewConsoleOutput() *ConsoleOutput {
-	return &ConsoleOutput{}
+func newConsoleOutput() *consoleOutput {
+	return &consoleOutput{}
 }
 
-func (consoleOut ConsoleOutput) OutputReport(report internal.Report) {
+func (consoleOut consoleOutput) outputReport(report internal.Report) {
 	printAsJson(report)
 }
 
-type FileOutput struct {
+type fileOutput struct {
 	file  *os.File
 	count int32
 }
 
-func NewFileOutput(file *os.File) *FileOutput {
-	return &FileOutput{
+func newFileOutput(file *os.File) *fileOutput {
+	return &fileOutput{
 		file:  file,
 		count: 0,
 	}
 }
 
-func (fileOut *FileOutput) OutputReport(report internal.Report) {
+func (fileOut *fileOutput) outputReport(report internal.Report) {
 	j, err := json.Marshal(report)
 	if err != nil {
 		fmt.Println(err)
@@ -46,6 +46,21 @@ func (fileOut *FileOutput) OutputReport(report internal.Report) {
 	fmt.Printf("\r%d scan results collected", fileOut.count)
 }
 
-func (fileOut *FileOutput) Close() {
+func (fileOut *fileOutput) close() {
 	fileOut.file.Close()
+}
+
+func getOutput(outputFilePath string) output {
+	if outputFilePath != "" {
+		outFile, err := os.Create(outputFilePath)
+		if err != nil {
+			fmt.Println("failed to create file " + outputFilePath)
+			os.Exit(0)
+		}
+		defer outFile.Close()
+
+		return newFileOutput(outFile)
+	} else {
+		return newConsoleOutput()
+	}
 }

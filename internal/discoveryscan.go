@@ -40,7 +40,7 @@ func (discovery *DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report
 
 			for _, d := range foundDomains {
 				if !discovery.seenUrls[d] {
-					if discovery.InScope(d) {
+					if discovery.inScope(d) {
 						discovery.seenUrls[d] = true
 						newTargets = append(newTargets, d)
 					}
@@ -53,7 +53,7 @@ func (discovery *DiscoveryScanner) Scan(urls []string, outputQueue chan<- Report
 	close(outputQueue)
 }
 
-func (discover *DiscoveryScanner) InScope(domain string) bool {
+func (discover *DiscoveryScanner) inScope(domain string) bool {
 	for _, s := range discover.scope {
 		if strings.HasSuffix(domain, s) {
 			return true
