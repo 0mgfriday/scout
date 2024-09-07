@@ -31,6 +31,7 @@ func multiTargetScan(scanner internal.Scanner, targetList string, scopeList stri
 		go multiScan.Scan(targets, outputQueue, maxThreads)
 
 		output := getOutput(outputFilePath)
+		defer output.close()
 
 		for item := range outputQueue {
 			output.outputReport(item)

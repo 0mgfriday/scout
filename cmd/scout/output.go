@@ -10,6 +10,7 @@ import (
 
 type output interface {
 	outputReport(report internal.Report)
+	close()
 }
 
 type consoleOutput struct {
@@ -21,6 +22,9 @@ func newConsoleOutput() *consoleOutput {
 
 func (consoleOut consoleOutput) outputReport(report internal.Report) {
 	printAsJson(report)
+}
+
+func (consoleOut consoleOutput) close() {
 }
 
 type fileOutput struct {
@@ -57,7 +61,6 @@ func getOutput(outputFilePath string) output {
 			fmt.Println("failed to create file " + outputFilePath)
 			os.Exit(0)
 		}
-		defer outFile.Close()
 
 		return newFileOutput(outFile)
 	} else {
