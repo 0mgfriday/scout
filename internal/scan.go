@@ -16,9 +16,10 @@ type Scanner struct {
 	client             http.Client
 	impersonateBrowser bool
 	checkCORS          bool
+	getPaths           bool
 }
 
-func NewScanner(timeout int, impersonateBrowser bool, proxy string, checkCORS bool) (*Scanner, error) {
+func NewScanner(timeout int, impersonateBrowser bool, proxy string, checkCORS bool, getPaths bool) (*Scanner, error) {
 	newScanner := Scanner{
 		client: http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -34,6 +35,7 @@ func NewScanner(timeout int, impersonateBrowser bool, proxy string, checkCORS bo
 		},
 		impersonateBrowser: impersonateBrowser,
 		checkCORS:          checkCORS,
+		getPaths:           getPaths,
 	}
 
 	if proxy != "" {
@@ -63,7 +65,7 @@ func (scan Scanner) Scan(u string) (*Report, error) {
 	}
 
 	IPs, _ := net.LookupIP(uri.Host)
-	return reportFromResponse(rsp.Request.URL.String(), IPs, rsp), nil
+	return reportFromResponse(rsp.Request.URL.String(), IPs, rsp, scan.getPaths), nil
 }
 
 func (scan Scanner) getWithRetry(url string, attempts int) (*http.Response, error) {

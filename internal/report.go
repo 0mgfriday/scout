@@ -20,9 +20,10 @@ type Report struct {
 	Wappalyzer string
 	Headers    map[string]string
 	JSFiles    []string
+	Paths      []string
 }
 
-func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response) *Report {
+func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response, getPaths bool) *Report {
 	report := Report{
 		Url:    url,
 		IPs:    ipsToString(IPAddresses),
@@ -48,6 +49,14 @@ func reportFromResponse(url string, IPAddresses []net.IP, rsp *http.Response) *R
 			report.Title = getTitle(bodyString)
 			report.JSFiles = getJSFiles(bodyString)
 			report.Wappalyzer = getWappalyzerResult(rsp.Header, bodyBytes)
+
+			if getPaths {
+				formActions := getFormActions(bodyString)
+				hrefs := getHrefs(bodyString)
+				paths := append(formActions, hrefs...)
+
+				report.Paths = sortAndDedupe(paths)
+			}
 		}
 	}
 
@@ -91,6 +100,34 @@ func getTitle(s string) string {
 	}
 
 	return ""
+}
+
+func getFormActions(s string) []string {
+	actions := []string{}
+	r := regexp.MustCompile(`action="(?P<Act>\/[\w\/-]{1,64})"`)
+	matches := r.FindAllStringSubmatch(s, -1)
+	for _, match := range matches {
+		index := r.SubexpIndex("Act")
+		if index != -1 {
+			actions = append(actions, match[index])
+		}
+	}
+
+	return actions
+}
+
+func getHrefs(s string) []string {
+	hrefs := []string{}
+	r := regexp.MustCompile(`href="(?P<Path>\/[\w\/-]{1,64})"`)
+	matches := r.FindAllStringSubmatch(s, -1)
+	for _, match := range matches {
+		index := r.SubexpIndex("Path")
+		if index != -1 {
+			hrefs = append(hrefs, match[index])
+		}
+	}
+
+	return hrefs
 }
 
 func getJSFiles(s string) []string {

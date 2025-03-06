@@ -43,6 +43,10 @@ func printReport(r internal.Report) {
 
 	printJsonValue("Headers", r.Headers)
 	printJsonValue("JSFiles", r.JSFiles)
+
+	if r.Paths != nil {
+		printJsonValue("Paths", r.Paths)
+	}
 }
 
 func printJsonValue(label string, value any) {
